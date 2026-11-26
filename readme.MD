@@ -2,7 +2,7 @@
 
 Sistema de gerenciamento financeiro colaborativo desenvolvido em Java. Permite cadastrar participantes, registrar despesas (fixas ou por pessoa) e simular cenários de corte de gastos (despesas não essenciais) caso o orçamento seja ultrapassado.
 
-![Captura de tela do programa aberto](src/img/screenshot.png)
+![Captura de tela do programa aberto](img/screenshot.png)
 
 ## 🛠️ Tecnologias e Requisitos
 - **JDK:** Versão 17 ou superior.
