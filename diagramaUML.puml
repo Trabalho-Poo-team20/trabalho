@@ -1,0 +1,138 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package persistencia {
+  interface PersistenciaDados {
+    +salvar(planejamento: Planejamento): void
+    +carregar(): Planejamento
+  }
+
+  class GerenciadorArquivo {
+    -NOME_ARQUIVO: String
+    +salvar(planejamento: Planejamento): void
+    +carregar(): Planejamento
+  }
+
+  PersistenciaDados <|.. GerenciadorArquivo
+}
+
+package modelo {
+  class Participante {
+    -codigo: int
+    -nome: String
+    -orcamento: double
+    +Participante(codigo: int, nome: String, orcamento: double)
+    +getCodigo(): int
+    +getNome(): String
+    +setNome(nome: String): void
+    +getOrcamento(): double
+    +setOrcamento(orcamento: double): void
+  }
+
+  class Planejamento {
+    -participantes: List<Participante>
+    -despesas: List<Despesa>
+    -proximoCodigoParticipante: int
+    +cadastrarParticipante(nome: String, orcamento: double): void
+    +cadastrarParticipante(p: Participante): void
+    +editarParticipante(codigo: int, novoNome: String, novoOrcamento: double): void
+    +removerParticipante(p: Participante): void
+    +adicionarDespesa(d: Despesa): void
+    +editarDespesa(antiga: Despesa, nova: Despesa): void
+    +removerDespesa(d: Despesa): void
+    +calcularTotalGeral(): double
+    +gerarResumoIndividual(codigoParticipante: int): double
+  }
+
+  abstract class Despesa {
+    #descricao: String
+    #valorInformado: double
+    #participantesEnvolvidos: Set<Participante>
+    #essencial: boolean
+    #prioridade: int
+    +Despesa(descricao: String, valor: double, participantes: Set<Participante>, essencial: boolean, prioridade: int)
+    +getTipoDescricao(): String
+    +{abstract} calcularRateio(): Map<Participante, Double>
+  }
+
+  class DespesaFixa {
+    +DespesaFixa(descricao: String, valor: double, participantes: Set<Participante>, essencial: boolean, prioridade: int)
+    +getTipoDescricao(): String
+    +calcularRateio(): Map<Participante, Double>
+  }
+
+  class DespesaPorPessoa {
+    +DespesaPorPessoa(descricao: String, valor: double, participantes: Set<Participante>, essencial: boolean, prioridade: int)
+    +getTipoDescricao(): String
+    +calcularRateio(): Map<Participante, Double>
+  }
+
+  class RelatorioSimulacao {
+    -viavel: boolean
+    -despesasMantidas: List<Despesa>
+    -despesasRetiradas: List<Despesa>
+    -planejamentoSimulado: Planejamento
+    -somaPrioridades: int
+    -mensagem: String
+    +isViavel(): boolean
+    +getDespesasMantidas(): List<Despesa>
+    +getDespesasRetiradas(): List<Despesa>
+    +getPlanejamentoSimulado(): Planejamento
+    +getSomaPrioridades(): int
+    +getMensagem(): String
+  }
+
+  class SimuladorAlternativas {
+    +buscarMelhorCenario(planejamentoOriginal: Planejamento): RelatorioSimulacao
+    -criarCopiaPlanejamento(participantes: List<Participante>, despesas: List<Despesa>): Planejamento
+    -dentroDosLimites(plano: Planejamento): boolean
+  }
+
+  Despesa <|-- DespesaFixa
+  Despesa <|-- DespesaPorPessoa
+  Planejamento "1" *-- "0..*" Participante : possui >
+  Planejamento "1" *-- "0..*" Despesa : gerencia >
+  Despesa "0..*" --> "1..*" Participante : rateada entre >
+  SimuladorAlternativas ..> RelatorioSimulacao : gera >
+  SimuladorAlternativas ..> Planejamento : simula >
+}
+
+package controlador {
+  class ControladorPlanejamento {
+    -planejamento: Planejamento
+    -persistencia: PersistenciaDados
+    +ControladorPlanejamento(persistencia: PersistenciaDados)
+    +adicionarParticipante(nome: String, orcamento: double): void
+    +editarParticipante(codigo: int, nome: String, orcamento: double): void
+    +removerParticipante(p: Participante): void
+    +adicionarDespesa(...): void
+    +editarDespesa(...): void
+    +removerDespesa(d: Despesa): void
+    +salvarPlanejamento(): void
+    +carregarPlanejamento(): void
+    +iniciarPlanejamentoVazio(): void
+    +gerarRelatorioTexto(): String
+    +rodarSimulador(): String
+  }
+}
+
+package visao {
+  class TelaPrincipal {
+    -controlador: ControladorPlanejamento
+    +TelaPrincipal(controlador: ControladorPlanejamento)
+  }
+}
+
+package principal {
+  class Main {
+    +{static} main(args: String[]): void
+  }
+}
+
+ControladorPlanejamento --> Planejamento : manipula
+ControladorPlanejamento --> PersistenciaDados : utiliza
+TelaPrincipal --> ControladorPlanejamento : envia ações
+Main ..> TelaPrincipal : inicializa
+Main ..> ControladorPlanejamento : inicializa
+Main ..> GerenciadorArquivo : injeta
+@enduml
