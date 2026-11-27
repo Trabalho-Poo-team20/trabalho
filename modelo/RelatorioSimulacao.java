@@ -1,39 +1,47 @@
 package modelo;
 
+import java.util.Collections;
 import java.util.List;
 
 public class RelatorioSimulacao {
-    private boolean sucessoCenarioBase;
-    private List<Despesa> despesasAprovadas;
-    private String mensagem;
+    private final boolean viavel;
+    private final List<Despesa> despesasMantidas;
+    private final List<Despesa> despesasRetiradas;
+    private final Planejamento planejamentoSimulado;
+    private final int somaPrioridades;
+    private final String mensagem;
 
-    public RelatorioSimulacao(boolean sucessoCenarioBase, List<Despesa> despesasAprovadas, String mensagem) {
-        this.sucessoCenarioBase = sucessoCenarioBase;
-        this.despesasAprovadas = despesasAprovadas;
+    public RelatorioSimulacao(boolean viavel, List<Despesa> despesasMantidas, List<Despesa> despesasRetiradas,
+                              Planejamento planejamentoSimulado, int somaPrioridades, String mensagem) {
+        this.viavel = viavel;
+        this.despesasMantidas = Collections.unmodifiableList(despesasMantidas);
+        this.despesasRetiradas = Collections.unmodifiableList(despesasRetiradas);
+        this.planejamentoSimulado = planejamentoSimulado;
+        this.somaPrioridades = somaPrioridades;
         this.mensagem = mensagem;
     }
 
-    public boolean isSucessoCenarioBase() {
-        return sucessoCenarioBase;
+    public boolean isViavel() {
+        return viavel;
     }
 
-    public void setSucessoCenarioBase(boolean sucessoCenarioBase) {
-        this.sucessoCenarioBase = sucessoCenarioBase;
+    public List<Despesa> getDespesasMantidas() {
+        return despesasMantidas;
     }
 
-    public List<Despesa> getDespesasAprovadas() {
-        return despesasAprovadas;
+    public List<Despesa> getDespesasRetiradas() {
+        return despesasRetiradas;
     }
 
-    public void setDespesasAprovadas(List<Despesa> despesasAprovadas) {
-        this.despesasAprovadas = despesasAprovadas;
+    public Planejamento getPlanejamentoSimulado() {
+        return planejamentoSimulado;
+    }
+
+    public int getSomaPrioridades() {
+        return somaPrioridades;
     }
 
     public String getMensagem() {
         return mensagem;
-    }
-
-    public void setMensagem(String mensagem) {
-        this.mensagem = mensagem;
     }
 }

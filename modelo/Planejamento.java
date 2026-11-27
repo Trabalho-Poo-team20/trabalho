@@ -1,8 +1,10 @@
 package modelo;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 public class Planejamento implements Serializable {
@@ -19,8 +21,10 @@ public class Planejamento implements Serializable {
 
     public void atualizarProximoCodigo() {
         int max = 0;
-        for(Participante p : participantes) {
-            if(p.getCodigo() > max) max = p.getCodigo();
+        for (Participante p : participantes) {
+            if (p.getCodigo() > max) {
+                max = p.getCodigo();
+            }
         }
         proximoCodigoParticipante = max + 1;
     }
@@ -28,20 +32,32 @@ public class Planejamento implements Serializable {
     public void cadastrarParticipante(String nome, double orcamento) {
         Participante novo = new Participante(proximoCodigoParticipante, nome, orcamento);
         participantes.add(novo);
+        participantes.sort(Comparator.comparingInt(Participante::getCodigo));
         proximoCodigoParticipante++;
     }
 
     public void cadastrarParticipante(Participante novoParticipante) {
+        if (novoParticipante == null) {
+            throw new IllegalArgumentException("Participante inválido.");
+        }
         for (Participante p : participantes) {
             if (p.getCodigo() == novoParticipante.getCodigo()) {
-                throw new IllegalArgumentException("Erro: Já existe um participante com este código.");
+                throw new IllegalArgumentException("Erro: Já existe um participante com o código " + novoParticipante.getCodigo() + ".");
             }
         }
         participantes.add(novoParticipante);
+        participantes.sort(Comparator.comparingInt(Participante::getCodigo));
         atualizarProximoCodigo();
     }
 
     public void editarParticipante(int codigo, String novoNome, double novoOrcamento) {
+        if (novoNome == null || novoNome.trim().isEmpty()) {
+            throw new IllegalArgumentException("O nome do participante não pode estar vazio.");
+        }
+        if (novoOrcamento < 0) {
+            throw new IllegalArgumentException("O orçamento deve ser maior ou igual a zero.");
+        }
+
         for (Participante p : participantes) {
             if (p.getCodigo() == codigo) {
                 p.setNome(novoNome);
@@ -55,18 +71,23 @@ public class Planejamento implements Serializable {
     public void removerParticipante(Participante p) {
         for (Despesa despesa : despesas) {
             if (despesa.getParticipantesEnvolvidos().contains(p)) {
-                throw new IllegalArgumentException("Erro: Não é possível excluir '" + p.getNome() + "' pois há despesas vinculadas.");
+                throw new IllegalArgumentException("Não é possível excluir '" + p.getNome() + "' pois há despesas vinculadas.");
             }
         }
         participantes.remove(p);
     }
 
     public void adicionarDespesa(Despesa novaDespesa) {
+        if (novaDespesa == null) {
+            throw new IllegalArgumentException("Despesa inválida.");
+        }
         despesas.add(novaDespesa);
     }
 
-    // NOVO: Edição de despesa substituindo o objeto para permitir troca de tipo[cite: 1]
     public void editarDespesa(Despesa antiga, Despesa nova) {
+        if (nova == null) {
+            throw new IllegalArgumentException("Despesa inválida.");
+        }
         int index = despesas.indexOf(antiga);
         if (index != -1) {
             despesas.set(index, nova);
@@ -80,18 +101,17 @@ public class Planejamento implements Serializable {
     }
 
     public double calcularTotalGeral() {
-        double total = 0.0;
+        long totalCentavos = 0L;
         for (Despesa despesa : despesas) {
             Map<Participante, Double> rateio = despesa.calcularRateio();
             for (Double valorCobrado : rateio.values()) {
-                total += valorCobrado;
+                totalCentavos += Math.round(valorCobrado * 100.0);
             }
         }
-        return total;
+        return totalCentavos / 100.0;
     }
 
     public double gerarResumoIndividual(int codigoParticipante) {
-        double totalIndividual = 0.0;
         Participante participanteAlvo = null;
         for (Participante p : participantes) {
             if (p.getCodigo() == codigoParticipante) {
@@ -101,15 +121,22 @@ public class Planejamento implements Serializable {
         }
         if (participanteAlvo == null) return 0.0;
 
+        long totalCentavos = 0L;
         for (Despesa despesa : despesas) {
             Map<Participante, Double> rateio = despesa.calcularRateio();
-            if (rateio.containsKey(participanteAlvo)) {
-                totalIndividual += rateio.get(participanteAlvo);
+            Double valor = rateio.get(participanteAlvo);
+            if (valor != null) {
+                totalCentavos += Math.round(valor * 100.0);
             }
         }
-        return totalIndividual;
+        return totalCentavos / 100.0;
     }
 
-    public List<Participante> getParticipantes() { return participantes; }
-    public List<Despesa> getDespesas() { return despesas; }
+    public List<Participante> getParticipantes() {
+        return Collections.unmodifiableList(participantes);
+    }
+
+    public List<Despesa> getDespesas() {
+        return Collections.unmodifiableList(despesas);
+    }
 }
